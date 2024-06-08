@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.title('CAPTIONIZE AI')
+st.title('CAPTIONIZE AI X MYCO.IO')
 
 st.sidebar.title('Navigation')
 pages = ['Home', 'myPlay', 'myLive', 'Blogs', '☁️ Upload Video']
@@ -31,7 +31,6 @@ elif page == '☁️ Upload Video':
             meow = st.text_input("Video URL")
 
             st.title("OR")
-
 
             import streamlit as st
             import subprocess
