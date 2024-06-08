@@ -1,10 +1,15 @@
+import streamlit as st
 import subprocess
 import whisper
 import os
+import tempfile
+from urllib import request
+from pathlib import Path
+
 
 def extract_audio(video_file, audio_file):
     command = ['ffmpeg', '-i', video_file, '-q:a', '0', '-map', 'a', audio_file]
-    subprocess.run(command)
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def transcribe_audio(audio_file):
     model = whisper.load_model("base")
@@ -34,7 +39,7 @@ def format_timestamp(seconds):
 
 def add_captions_to_video(video_file, srt_file, output_file):
     command = ['ffmpeg', '-i', video_file, '-vf', f"subtitles={srt_file}", output_file]
-    subprocess.run(command)
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def add_live_captions_to_video(video_file, output_file):
     audio_file = 'audio.wav'
@@ -45,15 +50,30 @@ def add_live_captions_to_video(video_file, output_file):
     create_srt(transcription, srt_file)
     add_captions_to_video(video_file, srt_file, output_file)
 
-# video_file = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4'
+st.title("Video Captioning With Live Language Translation")
+st.markdown("Provide an MP4 video URL to generate a captioned video.")
 
-video_file = 'https://storage.cloud.google.com/compasshackathon/german.mp4'
-# second news channel video 
-# https://storage.googleapis.com/aai-web-samples/news.mp4
+video_url = st.text_input("Video URL")
 
-# home_directory = os.path.expanduser('~')
-# output_file = os.path.join(home_directory, 'output_video.mp4')
+if video_url:
 
-output_file = 'output_video.mp4'
+    st.write("Downloading and displaying the original video...")
+    
+    with st.spinner('Processing video...'):
 
-add_live_captions_to_video(video_file, output_file)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp:
+            original_video_file = tmp.name
+            request.urlretrieve(video_url, original_video_file)
+
+        st.video(original_video_file)
+
+        output_file = 'output_video.mp4'
+        
+        add_live_captions_to_video(video_url, output_file)
+        st.write("Video processing complete!")
+        
+        st.write("Displaying the captioned video:")
+        if Path(output_file).is_file():
+            st.video(output_file)
+        else:
+            st.error("Failed to process video. Please try again.")
